@@ -229,7 +229,8 @@ describe('registerMockImage', () => {
     registerMockImage(image);
 
     const fileStreamId = image._refs?.file.id;
-    expect(fileStreamRegistry.has(fileStreamId!)).toBe(true);
+    expect(fileStreamId).toBeDefined();
+    expect(fileStreamRegistry.has(fileStreamId as string)).toBe(true);
   });
 });
 
@@ -247,6 +248,7 @@ describe('registerMockFile', () => {
     registerMockFile(file);
 
     const fileStreamId = file._refs?.file.id;
-    expect(fileStreamRegistry.has(fileStreamId!)).toBe(true);
+    expect(fileStreamId).toBeDefined();
+    expect(fileStreamRegistry.has(fileStreamId as string)).toBe(true);
   });
 });

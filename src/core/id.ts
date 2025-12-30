@@ -20,7 +20,7 @@ let idCounter = 0;
  * ```
  */
 export function generateId(prefix = 'mock'): string {
-  return `${prefix}-${Math.random().toString(36).substr(2, 9)}`;
+  return `${prefix}-${Math.random().toString(36).slice(2, 11)}`;
 }
 
 /**
@@ -54,5 +54,5 @@ export function resetIdCounter(): void {
  * Matches Jazz's internal FileStream ID format
  */
 export function generateFileStreamId(): string {
-  return `filestream_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return `filestream_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
 }

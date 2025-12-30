@@ -9,6 +9,31 @@ import { vi } from 'vitest';
 import { createMockJazzAPI, type MockJazzAPI } from './jazz-api.js';
 
 /**
+ * Registry of active blob loader timers for cleanup
+ */
+const activeTimers = new Set<ReturnType<typeof setTimeout>>();
+
+/**
+ * Clear all active blob loader timers
+ *
+ * Call this in afterEach() or beforeEach() to prevent memory leaks
+ * and test pollution from pending async operations.
+ *
+ * @example
+ * ```typescript
+ * afterEach(() => {
+ *   clearBlobLoaderTimers();
+ * });
+ * ```
+ */
+export function clearBlobLoaderTimers(): void {
+  for (const timer of activeTimers) {
+    clearTimeout(timer);
+  }
+  activeTimers.clear();
+}
+
+/**
  * Options for reactive collection mocks
  */
 export interface ReactiveCollectionOptions {
@@ -45,8 +70,9 @@ function createDelayedBlobLoader(
   let blobReady = false;
   let blob: Blob | null = null;
 
-  // Start async loading
-  setTimeout(async () => {
+  // Start async loading with cleanup tracking
+  const timer = setTimeout(async () => {
+    activeTimers.delete(timer);
     if (typeof originalFile.toBlob === 'function') {
       const result = originalFile.toBlob();
       blob = result instanceof Promise ? await result : (result ?? null);
@@ -55,6 +81,7 @@ function createDelayedBlobLoader(
     }
     blobReady = true;
   }, delayMs);
+  activeTimers.add(timer);
 
   return {
     ...originalFile,

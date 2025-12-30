@@ -167,13 +167,132 @@ export function resetJazzReactMocks(): void {
  * Get the current mock implementations
  *
  * Used internally by createJazzReactMocks() to create the vi.mock factory.
+ *
+ * @returns Object with hook implementation getters
  */
-export function getMockImplementations() {
+export function getMockImplementations(): {
+  usePasskeyAuth: () => MockPasskeyAuthState;
+  useCoState: () => unknown;
+  useAccount: () => MockAccountState | undefined;
+  useIsAuthenticated: () => boolean;
+} {
   return {
     usePasskeyAuth: () => mockUsePasskeyAuthImpl(),
     useCoState: () => mockUseCoStateImpl(),
     useAccount: () => mockUseAccountImpl(),
     useIsAuthenticated: () => mockUseIsAuthenticatedImpl(),
+  };
+}
+
+/**
+ * Isolated mock context for parallel test execution
+ *
+ * Creates a fresh set of mock implementations that don't share state
+ * with other tests. Use this when running tests in parallel to avoid
+ * test pollution.
+ *
+ * @returns Object with mock configuration functions and hook implementations
+ *
+ * @example
+ * ```typescript
+ * // In a test file
+ * const context = createIsolatedMockContext();
+ *
+ * // Configure mocks for this context only
+ * context.mockUseAccount({ id: 'test', profile: { name: 'Test' } });
+ *
+ * // Get mocks for vi.mock
+ * vi.mock('jazz-tools/react', () => context.createMocks());
+ * ```
+ */
+export function createIsolatedMockContext() {
+  let usePasskeyAuthImpl: () => MockPasskeyAuthState = () => ({
+    state: 'loading',
+    logIn: vi.fn(),
+  });
+
+  let useCoStateImpl: () => unknown = () => null;
+
+  let useAccountImpl: () => MockAccountState | undefined = () => ({
+    logOut: vi.fn(),
+  });
+
+  let useIsAuthenticatedImpl: () => boolean = () => false;
+
+  return {
+    /**
+     * Configure the usePasskeyAuth mock for this context
+     */
+    mockUsePasskeyAuth(config: {
+      state: 'ready' | 'loading' | 'anonymous';
+      logIn?: Mock<() => void>;
+    }): void {
+      usePasskeyAuthImpl = () => ({
+        state: config.state,
+        logIn: config.logIn ?? vi.fn(),
+      });
+    },
+
+    /**
+     * Configure the useCoState mock for this context
+     */
+    mockUseCoState<T>(data: T | null): void {
+      useCoStateImpl = () => data;
+    },
+
+    /**
+     * Configure the useAccount mock for this context
+     */
+    mockUseAccount(account: MockAccountState | undefined): void {
+      useAccountImpl = () =>
+        account
+          ? {
+              ...account,
+              logOut: account.logOut ?? vi.fn(),
+            }
+          : undefined;
+    },
+
+    /**
+     * Configure the useIsAuthenticated mock for this context
+     */
+    mockUseIsAuthenticated(isAuthenticated: boolean): void {
+      useIsAuthenticatedImpl = () => isAuthenticated;
+    },
+
+    /**
+     * Reset this context to default state
+     */
+    reset(): void {
+      usePasskeyAuthImpl = () => ({ state: 'loading', logIn: vi.fn() });
+      useCoStateImpl = () => null;
+      useAccountImpl = () => ({ logOut: vi.fn() });
+      useIsAuthenticatedImpl = () => false;
+    },
+
+    /**
+     * Get the current implementations for this context
+     */
+    getImplementations() {
+      return {
+        usePasskeyAuth: () => usePasskeyAuthImpl(),
+        useCoState: () => useCoStateImpl(),
+        useAccount: () => useAccountImpl(),
+        useIsAuthenticated: () => useIsAuthenticatedImpl(),
+      };
+    },
+
+    /**
+     * Create vi.mock factory for this context
+     */
+    createMocks() {
+      return {
+        usePasskeyAuth: vi.fn(() => usePasskeyAuthImpl()),
+        useCoState: vi.fn(() => useCoStateImpl()),
+        useAccount: vi.fn(() => useAccountImpl()),
+        useIsAuthenticated: vi.fn(() => useIsAuthenticatedImpl()),
+      };
+    },
   };
 }
 

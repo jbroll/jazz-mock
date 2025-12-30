@@ -43,8 +43,16 @@
     "vitest",
     "covalue"
   ],
-  "author": "",
+  "author": "jbroll",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jbroll/jazz-mock.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jbroll/jazz-mock/issues"
+  },
+  "homepage": "https://github.com/jbroll/jazz-mock#readme",
   "peerDependencies": {
     "vitest": ">=1.0.0"
   },

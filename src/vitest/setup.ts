@@ -142,47 +142,54 @@ export interface SetupJazzMocksOptions {
  * It sets up beforeEach/afterEach hooks for proper cleanup.
  *
  * @param options - Configuration options
+ * @returns Promise that resolves when setup is complete
  *
  * @example
  * ```typescript
  * // In vitest.setup.ts
  * import { setupJazzMocks } from 'jazz-mock/vitest';
  *
- * setupJazzMocks();
+ * await setupJazzMocks();
  * ```
  *
  * @example
  * ```typescript
  * // With custom options
- * setupJazzMocks({
+ * await setupJazzMocks({
  *   resetIds: true,
  *   clearFileRegistry: true,
  *   resetReactMocks: true,
  * });
  * ```
  */
-export function setupJazzMocks(options: SetupJazzMocksOptions = {}): void {
+export async function setupJazzMocks(options: SetupJazzMocksOptions = {}): Promise<void> {
   const { resetIds = true, clearFileRegistry = true, resetReactMocks = true } = options;
 
   // Import hooks dynamically to avoid circular dependencies
-  import('../react/hooks.js').then(({ resetJazzReactMocks }) => {
-    // Access beforeEach from global scope (Vitest globals)
-    const globalBeforeEach = (globalThis as Record<string, unknown>).beforeEach as
-      | ((fn: () => void) => void)
-      | undefined;
+  const { resetJazzReactMocks } = await import('../react/hooks.js');
 
-    if (typeof globalBeforeEach === 'function') {
-      globalBeforeEach(() => {
-        if (resetIds) {
-          resetIdCounter();
-        }
-        if (clearFileRegistry) {
-          fileStreamRegistry.clear();
-        }
-        if (resetReactMocks) {
-          resetJazzReactMocks();
-        }
-      });
+  // Access beforeEach from global scope (Vitest globals)
+  const globalBeforeEach = (globalThis as Record<string, unknown>).beforeEach as
+    | ((fn: () => void) => void)
+    | undefined;
+
+  if (typeof globalBeforeEach !== 'function') {
+    console.warn(
+      'jazz-mock: beforeEach not found in global scope. ' +
+        'Ensure Vitest globals are enabled or call resetJazzMocks() manually in beforeEach.',
+    );
+    return;
+  }
+
+  globalBeforeEach(() => {
+    if (resetIds) {
+      resetIdCounter();
+    }
+    if (clearFileRegistry) {
+      fileStreamRegistry.clear();
+    }
+    if (resetReactMocks) {
+      resetJazzReactMocks();
     }
   });
 }
@@ -236,10 +243,41 @@ export function getJazzMocks() {
 }
 
 /**
+ * Default patterns for Jazz-related console messages to suppress
+ */
+const DEFAULT_JAZZ_PATTERNS: RegExp[] = [
+  /^\[Jazz\]/,
+  /^Jazz:/,
+  /Jazz initialization/i,
+  /CoMap initialization warning/i,
+  /CoList initialization warning/i,
+  /^Warning: ReactDOM\.render is deprecated/,
+  /^Warning: componentWillReceiveProps has been renamed/,
+  /^Warning: componentWillMount has been renamed/,
+];
+
+/**
+ * Options for createJazzConsoleFilter
+ */
+export interface JazzConsoleFilterOptions {
+  /**
+   * Additional patterns to suppress (extends default patterns)
+   */
+  additionalPatterns?: RegExp[];
+  /**
+   * Replace default patterns entirely instead of extending
+   */
+  replaceDefaults?: boolean;
+}
+
+/**
  * Console filter for suppressing Jazz-related noise in tests
  *
  * Jazz initialization can produce console warnings that clutter test output.
- * This filter suppresses known Jazz-related messages.
+ * This filter suppresses known Jazz-related messages using specific patterns.
+ *
+ * @param options - Configuration options
+ * @returns Object with filtered error and warn functions
  *
  * @example
  * ```typescript
@@ -254,22 +292,25 @@ export function getJazzMocks() {
  *   warn: filter.warn,
  * };
  * ```
+ *
+ * @example
+ * ```typescript
+ * // With custom patterns
+ * const filter = createJazzConsoleFilter({
+ *   additionalPatterns: [/^MyApp:/],
+ * });
+ * ```
  */
-export function createJazzConsoleFilter() {
+export function createJazzConsoleFilter(options: JazzConsoleFilterOptions = {}) {
   const originalError = console.error;
   const originalWarn = console.warn;
 
-  const jazzPatterns = [
-    'Jazz',
-    'CoMap',
-    'CoList',
-    'account initialization',
-    'Warning: ReactDOM.render',
-    'componentWillReceiveProps',
-  ];
+  const patterns = options.replaceDefaults
+    ? (options.additionalPatterns ?? [])
+    : [...DEFAULT_JAZZ_PATTERNS, ...(options.additionalPatterns ?? [])];
 
   const shouldSuppress = (message: string): boolean => {
-    return jazzPatterns.some((pattern) => message.includes(pattern));
+    return patterns.some((pattern) => pattern.test(message));
   };
 
   return {
@@ -285,5 +326,9 @@ export function createJazzConsoleFilter() {
         originalWarn(...args);
       }
     },
+    /**
+     * Get the patterns being used for filtering
+     */
+    getPatterns: () => [...patterns],
   };
 }

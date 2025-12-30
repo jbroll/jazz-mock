@@ -26,7 +26,7 @@ export interface MockJazzAPI {
   /** Push to a list property */
   push: Mock<(value: unknown) => void>;
   /** Splice a list property */
-  splice: Mock<(index: number, count: number) => void>;
+  splice: Mock<(index: number, count: number, ...items: unknown[]) => void>;
   /** Delete a property */
   delete: Mock<(key: string) => void>;
   /** Check if a property exists */

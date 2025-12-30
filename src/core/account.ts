@@ -302,14 +302,6 @@ export function createMockTreeNode(options: CreateMockTreeNodeOptions): TreeNode
     ? createIterableCoList(options.children, { idPrefix: 'children' })
     : undefined;
 
-  // Set parent reference on children
-  if (children) {
-    const node = {} as TreeNode; // Forward reference
-    for (const child of children) {
-      child.parent = node;
-    }
-  }
-
   const node: TreeNode = {
     $isLoaded: true,
     $jazz: createMockJazzAPI({ id }),
