@@ -49,6 +49,7 @@ export function createJazzToolsMock() {
       record: vi.fn(() => createSchemaBuilder()),
       profile: vi.fn(() => createSchemaBuilder()),
       account: vi.fn(() => createMapBuilder()),
+      fileStream: vi.fn(() => createSchemaBuilder()),
       optional: vi.fn((schema: unknown) => schema),
     },
 
