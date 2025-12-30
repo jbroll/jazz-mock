@@ -185,6 +185,39 @@ export function getMockImplementations(): {
 }
 
 /**
+ * Isolated mock context interface
+ */
+export interface IsolatedMockContext {
+  /** Configure the usePasskeyAuth mock for this context */
+  mockUsePasskeyAuth(config: {
+    state: 'ready' | 'loading' | 'anonymous';
+    logIn?: Mock<() => void>;
+  }): void;
+  /** Configure the useCoState mock for this context */
+  mockUseCoState<T>(data: T | null): void;
+  /** Configure the useAccount mock for this context */
+  mockUseAccount(account: MockAccountState | undefined): void;
+  /** Configure the useIsAuthenticated mock for this context */
+  mockUseIsAuthenticated(isAuthenticated: boolean): void;
+  /** Reset this context to default state */
+  reset(): void;
+  /** Get the current implementations for this context */
+  getImplementations(): {
+    usePasskeyAuth: () => MockPasskeyAuthState;
+    useCoState: () => unknown;
+    useAccount: () => MockAccountState | undefined;
+    useIsAuthenticated: () => boolean;
+  };
+  /** Create vi.mock factory for this context */
+  createMocks(): {
+    usePasskeyAuth: Mock<() => MockPasskeyAuthState>;
+    useCoState: Mock<() => unknown>;
+    useAccount: Mock<() => MockAccountState | undefined>;
+    useIsAuthenticated: Mock<() => boolean>;
+  };
+}
+
+/**
  * Isolated mock context for parallel test execution
  *
  * Creates a fresh set of mock implementations that don't share state
@@ -205,7 +238,7 @@ export function getMockImplementations(): {
  * vi.mock('jazz-tools/react', () => context.createMocks());
  * ```
  */
-export function createIsolatedMockContext() {
+export function createIsolatedMockContext(): IsolatedMockContext {
   let usePasskeyAuthImpl: () => MockPasskeyAuthState = () => ({
     state: 'loading',
     logIn: vi.fn(),

@@ -5,9 +5,11 @@
  */
 
 export {
+  createIsolatedMockContext,
   createJazzReactMocks,
   createJazzReactModuleMocks,
   getMockImplementations,
+  type IsolatedMockContext,
   type MockAccountState,
   type MockPasskeyAuthState,
   mockUseAccount,

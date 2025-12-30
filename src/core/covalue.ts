@@ -339,6 +339,8 @@ export function createDeepMock<T>(
  * Create a mock CoList with iterator support
  *
  * Jazz CoLists are iterable. This helper ensures proper Symbol.iterator support.
+ * Note: Arrays already have Symbol.iterator, but this explicit implementation
+ * ensures consistent generator-based iteration that may be expected by Jazz internals.
  *
  * @param items - Initial items
  * @param options - Configuration options
@@ -350,7 +352,8 @@ export function createIterableCoList<T>(
 ): MockCoList<T> & { findIndex: (fn: (item: T) => boolean) => number } {
   const list = createMockCoList(items, options);
 
-  // Ensure iterator is properly set up
+  // Explicit generator-based iterator for Jazz compatibility
+  // (Arrays have native iterators, but Jazz may expect generator behavior)
   (list as unknown as { [Symbol.iterator]: () => Iterator<T> })[Symbol.iterator] = function* () {
     for (let i = 0; i < list.length; i++) {
       yield list[i];

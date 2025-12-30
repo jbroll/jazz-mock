@@ -59,6 +59,7 @@ export {
 } from './jazz-api.js';
 // Reactive collections (Proxy-based)
 export {
+  clearBlobLoaderTimers,
   createMapWithReactiveCollections,
   createMapWithSyncImages,
   createReactiveList,

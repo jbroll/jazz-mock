@@ -70,16 +70,34 @@ function createDelayedBlobLoader(
   let blobReady = false;
   let blob: Blob | null = null;
 
-  // Start async loading with cleanup tracking
-  const timer = setTimeout(async () => {
+  // Start async loading with cleanup tracking and error handling
+  const timer = setTimeout(() => {
     activeTimers.delete(timer);
-    if (typeof originalFile.toBlob === 'function') {
-      const result = originalFile.toBlob();
-      blob = result instanceof Promise ? await result : (result ?? null);
-    } else {
-      blob = new Blob(['mock'], { type: 'application/octet-stream' });
+    try {
+      if (typeof originalFile.toBlob === 'function') {
+        const result = originalFile.toBlob();
+        if (result instanceof Promise) {
+          result
+            .then((b) => {
+              blob = b ?? null;
+              blobReady = true;
+            })
+            .catch(() => {
+              blob = null;
+              blobReady = true;
+            });
+        } else {
+          blob = result ?? null;
+          blobReady = true;
+        }
+      } else {
+        blob = new Blob(['mock'], { type: 'application/octet-stream' });
+        blobReady = true;
+      }
+    } catch {
+      blob = null;
+      blobReady = true;
     }
-    blobReady = true;
   }, delayMs);
   activeTimers.add(timer);
 
