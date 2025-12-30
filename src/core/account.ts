@@ -4,10 +4,15 @@
  * Creates mock Jazz Account and Group objects for testing.
  */
 
-import { vi, type Mock } from "vitest";
-import { generateId } from "./id.js";
-import { createMockJazzAPI, type MockJazzAPI } from "./jazz-api.js";
-import { createIterableCoList, createMockCoMap, type MockCoMap, type MockCoList } from "./covalue.js";
+import { type Mock, vi } from 'vitest';
+import {
+  createIterableCoList,
+  createMockCoMap,
+  type MockCoList,
+  type MockCoMap,
+} from './covalue.js';
+import { generateId } from './id.js';
+import { createMockJazzAPI, type MockJazzAPI } from './jazz-api.js';
 
 /**
  * Mock profile structure
@@ -68,17 +73,17 @@ export interface MockAccount<TRoot = unknown> {
  * ```
  */
 export function createMockAccount<TRoot extends object = Record<string, unknown>>(
-  options: CreateMockAccountOptions<TRoot> = {}
+  options: CreateMockAccountOptions<TRoot> = {},
 ): MockAccount<TRoot> {
-  const id = options.id ?? generateId("account");
-  const name = options.name ?? "Test User";
+  const id = options.id ?? generateId('account');
+  const name = options.name ?? 'Test User';
   const displayName = options.displayName ?? name;
 
   const profile: MockProfile = {
     $isLoaded: true,
     name,
     displayName,
-    $jazz: createMockJazzAPI({ idPrefix: "profile" }),
+    $jazz: createMockJazzAPI({ idPrefix: 'profile' }),
   };
 
   // Create root with Jazz metadata if provided
@@ -87,7 +92,7 @@ export function createMockAccount<TRoot extends object = Record<string, unknown>
     ...rootData,
     $isLoaded: true as const,
     $jazz: createMockJazzAPI({
-      idPrefix: "root",
+      idPrefix: 'root',
       target: options.trackMutations ? (rootData as Record<string, unknown>) : undefined,
     }),
   };
@@ -152,8 +157,8 @@ export interface MockGroup {
  * ```
  */
 export function createMockGroup(options: CreateMockGroupOptions = {}): MockGroup {
-  const id = options.id ?? generateId("group");
-  const owner = options.owner ?? { id: "test-owner" };
+  const id = options.id ?? generateId('group');
+  const owner = options.owner ?? { id: 'test-owner' };
   const members = options.members ?? [owner];
 
   return {
@@ -209,16 +214,16 @@ export interface FoldersRoot<TFolder = unknown> {
  */
 export function createMockAccountWithFolders<TFolder>(
   folders: TFolder[] = [],
-  options: Omit<CreateMockAccountOptions, "root"> = {}
+  options: Omit<CreateMockAccountOptions, 'root'> = {},
 ): MockAccount<FoldersRoot<TFolder>> {
   const foldersList = createIterableCoList(folders, {
-    idPrefix: "folders",
+    idPrefix: 'folders',
     trackMutations: options.trackMutations,
   });
 
   const root: FoldersRoot<TFolder> = {
     $isLoaded: true,
-    $jazz: createMockJazzAPI({ idPrefix: "root" }),
+    $jazz: createMockJazzAPI({ idPrefix: 'root' }),
     folders: foldersList,
     viewState: createMockCoMap<Record<string, unknown>>({ folderExpanded: {} }),
   };
@@ -237,7 +242,7 @@ export interface TreeNode {
   $jazz: MockJazzAPI;
   id: string;
   name: string;
-  type: "folder" | "map" | "item";
+  type: 'folder' | 'map' | 'item';
   parent?: TreeNode;
   children?: MockCoList<TreeNode>;
   expanded?: boolean;
@@ -253,7 +258,7 @@ export interface CreateMockTreeNodeOptions {
   /** Node name */
   name: string;
   /** Node type */
-  type?: "folder" | "map" | "item";
+  type?: 'folder' | 'map' | 'item';
   /** Child nodes */
   children?: TreeNode[];
   /** Parent node */
@@ -290,11 +295,11 @@ export interface CreateMockTreeNodeOptions {
  * ```
  */
 export function createMockTreeNode(options: CreateMockTreeNodeOptions): TreeNode {
-  const id = options.id ?? generateId(options.type ?? "node");
-  const type = options.type ?? "folder";
+  const id = options.id ?? generateId(options.type ?? 'node');
+  const type = options.type ?? 'folder';
 
   const children = options.children
-    ? createIterableCoList(options.children, { idPrefix: "children" })
+    ? createIterableCoList(options.children, { idPrefix: 'children' })
     : undefined;
 
   // Set parent reference on children

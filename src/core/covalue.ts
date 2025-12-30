@@ -5,8 +5,8 @@
  * but without actual Jazz runtime.
  */
 
-import { vi, type Mock } from "vitest";
-import { createMockJazzAPI, type MockJazzAPI, type MockOwner } from "./jazz-api.js";
+import { type Mock, vi } from 'vitest';
+import { createMockJazzAPI, type MockJazzAPI, type MockOwner } from './jazz-api.js';
 
 /**
  * Base properties that all mock CoValues have
@@ -103,13 +103,13 @@ export interface CreateMockCoValueOptions {
  */
 export function createMockCoMap<T extends object>(
   data: T,
-  options: CreateMockCoValueOptions = {}
+  options: CreateMockCoValueOptions = {},
 ): MockCoMap<T> {
   const target = { ...data } as T & MockCoValueBase;
 
   const $jazz = createMockJazzAPI({
     id: options.id,
-    idPrefix: options.idPrefix ?? "comap",
+    idPrefix: options.idPrefix ?? 'comap',
     owner: options.owner,
     target: options.trackMutations ? (target as Record<string, unknown>) : undefined,
   });
@@ -159,13 +159,13 @@ export function createMockCoMap<T extends object>(
  */
 export function createMockCoList<T>(
   items: T[] = [],
-  options: CreateMockCoValueOptions = {}
+  options: CreateMockCoValueOptions = {},
 ): MockCoList<T> {
   const list = [...items] as MockCoList<T>;
 
   const baseJazz = createMockJazzAPI({
     id: options.id,
-    idPrefix: options.idPrefix ?? "colist",
+    idPrefix: options.idPrefix ?? 'colist',
     owner: options.owner,
   });
 
@@ -214,13 +214,13 @@ export function createMockCoList<T>(
  */
 export function createMockCoRecord<T>(
   data: Record<string, T> = {},
-  options: CreateMockCoValueOptions = {}
+  options: CreateMockCoValueOptions = {},
 ): MockCoRecord<T> {
   const record = { ...data } as MockCoRecord<T>;
 
   const $jazz = createMockJazzAPI({
     id: options.id,
-    idPrefix: options.idPrefix ?? "corecord",
+    idPrefix: options.idPrefix ?? 'corecord',
     owner: options.owner,
     target: options.trackMutations ? (record as Record<string, unknown>) : undefined,
   });
@@ -251,7 +251,7 @@ export function createMockCoRecord<T>(
  */
 export function addJazzMetadata<T extends object>(
   target: T,
-  options: CreateMockCoValueOptions = {}
+  options: CreateMockCoValueOptions = {},
 ): T & MockCoValueBase {
   const result = target as T & MockCoValueBase;
 
@@ -297,7 +297,7 @@ export function addJazzMetadata<T extends object>(
  */
 export function createDeepMock<T>(
   data: T,
-  options: CreateMockCoValueOptions = {}
+  options: CreateMockCoValueOptions = {},
 ): T extends Array<infer U>
   ? MockCoList<U extends object ? MockCoMap<U> : U>
   : T extends object
@@ -311,18 +311,18 @@ export function createDeepMock<T>(
     : T {
   if (Array.isArray(data)) {
     const items = data.map((item) =>
-      typeof item === "object" && item !== null
+      typeof item === 'object' && item !== null
         ? createDeepMock(item, { ...options, id: undefined })
-        : item
+        : item,
     );
     return createMockCoList(items, options) as ReturnType<typeof createDeepMock<T>>;
   }
 
-  if (typeof data === "object" && data !== null) {
+  if (typeof data === 'object' && data !== null) {
     const result: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(data)) {
-      if (typeof value === "object" && value !== null) {
+      if (typeof value === 'object' && value !== null) {
         result[key] = createDeepMock(value, { ...options, id: undefined });
       } else {
         result[key] = value;
@@ -346,7 +346,7 @@ export function createDeepMock<T>(
  */
 export function createIterableCoList<T>(
   items: T[] = [],
-  options: CreateMockCoValueOptions = {}
+  options: CreateMockCoValueOptions = {},
 ): MockCoList<T> & { findIndex: (fn: (item: T) => boolean) => number } {
   const list = createMockCoList(items, options);
 
@@ -358,9 +358,9 @@ export function createIterableCoList<T>(
   };
 
   // Add findIndex for convenience
-  (list as unknown as { findIndex: (fn: (item: T) => boolean) => number }).findIndex = function (
-    fn: (item: T) => boolean
-  ) {
+  (list as unknown as { findIndex: (fn: (item: T) => boolean) => number }).findIndex = (
+    fn: (item: T) => boolean,
+  ) => {
     for (let i = 0; i < list.length; i++) {
       if (fn(list[i])) return i;
     }

@@ -5,9 +5,9 @@
  * This module provides mocks for testing file operations.
  */
 
-import { vi, type Mock } from "vitest";
-import { generateFileStreamId, generateId } from "./id.js";
-import { createMockJazzAPI, type MockJazzAPI } from "./jazz-api.js";
+import { type Mock, vi } from 'vitest';
+import { generateFileStreamId, generateId } from './id.js';
+import { createMockJazzAPI, type MockJazzAPI } from './jazz-api.js';
 
 /**
  * Mock FileStream object
@@ -34,9 +34,9 @@ export interface MockFileStream {
  * ```
  */
 export function createMockFileStream(
-  content: string | Blob = "",
-  contentType = "application/octet-stream",
-  id?: string
+  content: string | Blob = '',
+  contentType = 'application/octet-stream',
+  id?: string,
 ): MockFileStream {
   const blob = content instanceof Blob ? content : new Blob([content], { type: contentType });
 
@@ -117,11 +117,11 @@ export interface CreateMockImageOptions {
  * ```
  */
 export function createMockImageDefinition(
-  options: CreateMockImageOptions = {}
+  options: CreateMockImageOptions = {},
 ): MockImageDefinition {
-  const id = options.id ?? generateId("img");
-  const filename = options.filename ?? "test-image.png";
-  const contentType = options.contentType ?? "image/png";
+  const id = options.id ?? generateId('img');
+  const filename = options.filename ?? 'test-image.png';
+  const contentType = options.contentType ?? 'image/png';
   const size = options.size ?? 1024;
   const content = options.content ?? `${id}-content`;
 
@@ -142,7 +142,7 @@ export function createMockImageDefinition(
       height: options.height,
     },
     uploadedAt: options.uploadedAt ?? new Date().toISOString(),
-    uploadedBy: options.uploadedBy ?? "test-user",
+    uploadedBy: options.uploadedBy ?? 'test-user',
     _refs: {
       file: { id: fileStreamId },
     },
@@ -215,9 +215,9 @@ export interface CreateMockFileOptions {
  * ```
  */
 export function createMockFileDefinition(options: CreateMockFileOptions = {}): MockFileDefinition {
-  const id = options.id ?? generateId("file");
-  const filename = options.filename ?? "test-file.txt";
-  const contentType = options.contentType ?? "text/plain";
+  const id = options.id ?? generateId('file');
+  const filename = options.filename ?? 'test-file.txt';
+  const contentType = options.contentType ?? 'text/plain';
   const size = options.size ?? 512;
   const content = options.content ?? `${id}-content`;
 
@@ -237,7 +237,7 @@ export function createMockFileDefinition(options: CreateMockFileOptions = {}): M
       description: options.description,
     },
     uploadedAt: options.uploadedAt ?? new Date().toISOString(),
-    uploadedBy: options.uploadedBy ?? "test-user",
+    uploadedBy: options.uploadedBy ?? 'test-user',
     _refs: {
       file: { id: fileStreamId },
     },
@@ -337,8 +337,8 @@ export const fileStreamRegistry = new FileStreamRegistry();
  * ```
  */
 export function createFileStreamMock(
-  registry: FileStreamRegistry = fileStreamRegistry
-): ReturnType<FileStreamRegistry["createMock"]> {
+  registry: FileStreamRegistry = fileStreamRegistry,
+): ReturnType<FileStreamRegistry['createMock']> {
   return registry.createMock();
 }
 
@@ -352,7 +352,7 @@ export function createFileStreamMock(
  */
 export function registerMockImage(
   imageDef: MockImageDefinition,
-  registry: FileStreamRegistry = fileStreamRegistry
+  registry: FileStreamRegistry = fileStreamRegistry,
 ): void {
   const fileStreamId = imageDef._refs?.file?.id;
   if (fileStreamId) {
@@ -368,7 +368,7 @@ export function registerMockImage(
  */
 export function registerMockFile(
   fileDef: MockFileDefinition,
-  registry: FileStreamRegistry = fileStreamRegistry
+  registry: FileStreamRegistry = fileStreamRegistry,
 ): void {
   const fileStreamId = fileDef._refs?.file?.id;
   if (fileStreamId) {

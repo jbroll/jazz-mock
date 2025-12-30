@@ -29,8 +29,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src --ext .ts,.tsx",
-    "prepublishOnly": "npm run build"
+    "lint": "npx biome check src",
+    "format": "npx biome check --write src",
+    "prepublishOnly": "npm run build",
+    "prepare": "./scripts/git-hooks/install.sh",
+    "setup:hooks": "./scripts/git-hooks/install.sh"
   },
   "keywords": [
     "jazz",
@@ -51,6 +54,7 @@
     }
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.3.10",
     "@types/node": "^22.0.0",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"

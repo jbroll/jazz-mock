@@ -4,10 +4,10 @@
  * Provides helpers for setting up Jazz mocks in Vitest.
  */
 
-import { vi } from "vitest";
-import { createJazzReactMocks, createJazzReactModuleMocks } from "../react/hooks.js";
-import { createFileStreamMock, fileStreamRegistry } from "../core/file-stream.js";
-import { resetIdCounter } from "../core/id.js";
+import { vi } from 'vitest';
+import { createFileStreamMock, fileStreamRegistry } from '../core/file-stream.js';
+import { resetIdCounter } from '../core/id.js';
+import { createJazzReactMocks, createJazzReactModuleMocks } from '../react/hooks.js';
 
 /**
  * Create a complete jazz-tools module mock
@@ -115,13 +115,13 @@ export function setupJazzMocks(options: SetupJazzMocksOptions = {}): void {
   const { resetIds = true, clearFileRegistry = true, resetReactMocks = true } = options;
 
   // Import hooks dynamically to avoid circular dependencies
-  import("../react/hooks.js").then(({ resetJazzReactMocks }) => {
+  import('../react/hooks.js').then(({ resetJazzReactMocks }) => {
     // Access beforeEach from global scope (Vitest globals)
     const globalBeforeEach = (globalThis as Record<string, unknown>).beforeEach as
       | ((fn: () => void) => void)
       | undefined;
 
-    if (typeof globalBeforeEach === "function") {
+    if (typeof globalBeforeEach === 'function') {
       globalBeforeEach(() => {
         if (resetIds) {
           resetIdCounter();
@@ -156,7 +156,7 @@ export function setupJazzMocks(options: SetupJazzMocksOptions = {}): void {
 export const jazzTestConfig = {
   test: {
     globals: true,
-    environment: "jsdom",
+    environment: 'jsdom',
     setupFiles: [],
   },
 };
@@ -210,12 +210,12 @@ export function createJazzConsoleFilter() {
   const originalWarn = console.warn;
 
   const jazzPatterns = [
-    "Jazz",
-    "CoMap",
-    "CoList",
-    "account initialization",
-    "Warning: ReactDOM.render",
-    "componentWillReceiveProps",
+    'Jazz',
+    'CoMap',
+    'CoList',
+    'account initialization',
+    'Warning: ReactDOM.render',
+    'componentWillReceiveProps',
   ];
 
   const shouldSuppress = (message: string): boolean => {
@@ -224,13 +224,13 @@ export function createJazzConsoleFilter() {
 
   return {
     error: (...args: unknown[]) => {
-      const message = String(args[0] ?? "");
+      const message = String(args[0] ?? '');
       if (!shouldSuppress(message)) {
         originalError(...args);
       }
     },
     warn: (...args: unknown[]) => {
-      const message = String(args[0] ?? "");
+      const message = String(args[0] ?? '');
       if (!shouldSuppress(message)) {
         originalWarn(...args);
       }

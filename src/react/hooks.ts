@@ -8,13 +8,13 @@
  * - useIsAuthenticated
  */
 
-import { vi, type Mock } from "vitest";
+import { type Mock, vi } from 'vitest';
 
 /**
  * Mock auth state for usePasskeyAuth
  */
 export interface MockPasskeyAuthState {
-  state: "ready" | "loading" | "anonymous";
+  state: 'ready' | 'loading' | 'anonymous';
   logIn: Mock<() => void>;
 }
 
@@ -38,7 +38,7 @@ export interface MockAccountState {
 
 // Store for mock implementations
 let mockUsePasskeyAuthImpl: () => MockPasskeyAuthState = () => ({
-  state: "loading",
+  state: 'loading',
   logIn: vi.fn(),
 });
 
@@ -69,7 +69,7 @@ let mockUseIsAuthenticatedImpl: () => boolean = () => false;
  * ```
  */
 export function mockUsePasskeyAuth(config: {
-  state: "ready" | "loading" | "anonymous";
+  state: 'ready' | 'loading' | 'anonymous';
   logIn?: Mock<() => void>;
 }): void {
   mockUsePasskeyAuthImpl = () => ({
@@ -153,7 +153,7 @@ export function mockUseIsAuthenticated(isAuthenticated: boolean): void {
  */
 export function resetJazzReactMocks(): void {
   mockUsePasskeyAuthImpl = () => ({
-    state: "loading",
+    state: 'loading',
     logIn: vi.fn(),
   });
   mockUseCoStateImpl = () => null;

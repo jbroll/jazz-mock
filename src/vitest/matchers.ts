@@ -4,18 +4,18 @@
  * Provides assertion helpers for testing Jazz CoValues.
  */
 
-import { expect } from "vitest";
+import { expect } from 'vitest';
 
 /**
  * Check if an object is a mock CoValue (has $isLoaded and $jazz)
  */
 function isCoValue(obj: unknown): obj is { $isLoaded: boolean; $jazz: { id: string } } {
   return (
-    typeof obj === "object" &&
+    typeof obj === 'object' &&
     obj !== null &&
-    "$isLoaded" in obj &&
-    "$jazz" in obj &&
-    typeof (obj as Record<string, unknown>).$jazz === "object"
+    '$isLoaded' in obj &&
+    '$jazz' in obj &&
+    typeof (obj as Record<string, unknown>).$jazz === 'object'
   );
 }
 
@@ -98,10 +98,7 @@ export const jazzMatchers = {
   /**
    * Assert that $jazz.set was called with a specific key
    */
-  toHaveBeenCalledWithKey(
-    received: unknown,
-    expectedKey: string
-  ) {
+  toHaveBeenCalledWithKey(received: unknown, expectedKey: string) {
     const mock = received as { mock?: { calls: unknown[][] } };
 
     if (!mock?.mock?.calls) {
@@ -127,11 +124,7 @@ export const jazzMatchers = {
   /**
    * Assert that $jazz.set was called with a specific key and value
    */
-  toHaveBeenCalledWithKeyValue(
-    received: unknown,
-    expectedKey: string,
-    expectedValue: unknown
-  ) {
+  toHaveBeenCalledWithKeyValue(received: unknown, expectedKey: string, expectedValue: unknown) {
     const mock = received as { mock?: { calls: unknown[][] } };
 
     if (!mock?.mock?.calls) {
@@ -143,7 +136,8 @@ export const jazzMatchers = {
 
     const calls = mock.mock.calls;
     const pass = calls.some(
-      (call) => call[0] === expectedKey && JSON.stringify(call[1]) === JSON.stringify(expectedValue)
+      (call) =>
+        call[0] === expectedKey && JSON.stringify(call[1]) === JSON.stringify(expectedValue),
     );
 
     return {
@@ -159,7 +153,7 @@ export const jazzMatchers = {
 /**
  * TypeScript declaration merging for custom matchers
  */
-declare module "vitest" {
+declare module 'vitest' {
   interface Assertion {
     toBeCoValue(): void;
     toHaveJazzId(expectedId: string): void;

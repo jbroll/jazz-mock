@@ -4,13 +4,12 @@
  * Provides setup utilities and custom matchers for testing Jazz applications.
  */
 
+export { jazzMatchers, registerJazzMatchers } from './matchers.js';
 export {
-  createJazzToolsMock,
-  setupJazzMocks,
-  jazzTestConfig,
-  getJazzMocks,
   createJazzConsoleFilter,
+  createJazzToolsMock,
+  getJazzMocks,
+  jazzTestConfig,
   type SetupJazzMocksOptions,
-} from "./setup.js";
-
-export { jazzMatchers, registerJazzMatchers } from "./matchers.js";
+  setupJazzMocks,
+} from './setup.js';

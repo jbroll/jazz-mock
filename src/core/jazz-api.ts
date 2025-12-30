@@ -5,8 +5,8 @@
  * This module provides mock implementations for testing.
  */
 
-import { vi, type Mock } from "vitest";
-import { generateId } from "./id.js";
+import { type Mock, vi } from 'vitest';
+import { generateId } from './id.js';
 
 /**
  * Mock owner reference
@@ -86,7 +86,7 @@ export interface CreateMockJazzAPIOptions {
  */
 export function createMockJazzAPI(options: CreateMockJazzAPIOptions = {}): MockJazzAPI {
   const id = options.id ?? generateId(options.idPrefix);
-  const owner = options.owner ?? { id: "test-group" };
+  const owner = options.owner ?? { id: 'test-group' };
   const target = options.target;
 
   return {

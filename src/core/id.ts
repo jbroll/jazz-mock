@@ -19,7 +19,7 @@ let idCounter = 0;
  * const poiId = generateId("poi"); // "poi-b8g0l3n2r"
  * ```
  */
-export function generateId(prefix = "mock"): string {
+export function generateId(prefix = 'mock'): string {
   return `${prefix}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
@@ -36,7 +36,7 @@ export function generateId(prefix = "mock"): string {
  * const id2 = generateSequentialId("item"); // "item-2"
  * ```
  */
-export function generateSequentialId(prefix = "mock"): string {
+export function generateSequentialId(prefix = 'mock'): string {
   idCounter++;
   return `${prefix}-${idCounter}`;
 }
