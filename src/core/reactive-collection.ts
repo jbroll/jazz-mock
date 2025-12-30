@@ -255,8 +255,21 @@ export function createReactiveList<T = unknown>(
         data.push(value);
       }
     }),
-    splice: vi.fn((index: number, count: number) => {
-      data.splice(index, count);
+    splice: vi.fn((index: number, count: number, ...items: T[]) => {
+      // Process items for async loading if needed
+      const processedItems = items.map((item) => {
+        if (simulateAsync && item && typeof item === 'object' && 'file' in item) {
+          return {
+            ...item,
+            file: createDelayedBlobLoader(
+              (item as { file: { toBlob?: () => Blob | undefined } }).file,
+              loadDelay,
+            ),
+          } as T;
+        }
+        return item;
+      });
+      data.splice(index, count, ...processedItems);
     }),
   };
 

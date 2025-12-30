@@ -532,3 +532,130 @@ describe('reactive collection edge cases', () => {
     expect(list.length).toBe(0);
   });
 });
+
+describe('blob loader error handling', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    clearBlobLoaderTimers();
+    vi.useRealTimers();
+  });
+
+  it('handles toBlob throwing synchronously', async () => {
+    const record = createReactiveRecord<{ file: { toBlob: () => Blob } }>({
+      simulateAsyncLoading: true,
+      asyncLoadDelayMs: 50,
+    });
+
+    record.$jazz.set('item', {
+      file: {
+        toBlob: () => {
+          throw new Error('Sync error in toBlob');
+        },
+      },
+    });
+
+    // Initially undefined
+    expect(record['item'].file.toBlob()).toBeUndefined();
+
+    // After delay, should return null (error was caught)
+    await vi.advanceTimersByTimeAsync(100);
+    expect(record['item'].file.toBlob()).toBeNull();
+  });
+
+  it('handles toBlob returning rejected Promise', async () => {
+    const record = createReactiveRecord<{ file: { toBlob: () => Promise<Blob> } }>({
+      simulateAsyncLoading: true,
+      asyncLoadDelayMs: 50,
+    });
+
+    record.$jazz.set('item', {
+      file: {
+        toBlob: () => Promise.reject(new Error('Async error in toBlob')),
+      },
+    });
+
+    // Initially undefined
+    expect(record['item'].file.toBlob()).toBeUndefined();
+
+    // After delay, should return null (rejection was caught)
+    await vi.advanceTimersByTimeAsync(100);
+    expect(record['item'].file.toBlob()).toBeNull();
+  });
+
+  it('handles toBlob returning undefined', async () => {
+    const record = createReactiveRecord<{ file: { toBlob: () => Blob | undefined } }>({
+      simulateAsyncLoading: true,
+      asyncLoadDelayMs: 50,
+    });
+
+    record.$jazz.set('item', {
+      file: {
+        toBlob: () => undefined,
+      },
+    });
+
+    await vi.advanceTimersByTimeAsync(100);
+    expect(record['item'].file.toBlob()).toBeNull();
+  });
+
+  it('handles toBlob returning null via Promise', async () => {
+    const record = createReactiveRecord<{ file: { toBlob: () => Promise<Blob | null> } }>({
+      simulateAsyncLoading: true,
+      asyncLoadDelayMs: 50,
+    });
+
+    record.$jazz.set('item', {
+      file: {
+        toBlob: () => Promise.resolve(null) as Promise<Blob | null>,
+      },
+    });
+
+    await vi.advanceTimersByTimeAsync(100);
+    expect(record['item'].file.toBlob()).toBeNull();
+  });
+
+  it('list items handle toBlob errors', async () => {
+    const list = createReactiveList<{ file: { toBlob: () => Blob } }>([], {
+      simulateAsyncLoading: true,
+      asyncLoadDelayMs: 50,
+    });
+
+    list.$jazz.push({
+      file: {
+        toBlob: () => {
+          throw new Error('List item toBlob error');
+        },
+      },
+    });
+
+    expect(list[0].file.toBlob()).toBeUndefined();
+
+    await vi.advanceTimersByTimeAsync(100);
+    expect(list[0].file.toBlob()).toBeNull();
+  });
+
+  it('splice items handle toBlob errors', async () => {
+    // Start with empty list - items added via splice will get wrapped
+    const list = createReactiveList<{ file: { toBlob: () => Blob } }>([], {
+      simulateAsyncLoading: true,
+      asyncLoadDelayMs: 50,
+    });
+
+    // Insert at index 0 via splice
+    list.$jazz.splice(0, 0, {
+      file: {
+        toBlob: () => {
+          throw new Error('Splice item toBlob error');
+        },
+      },
+    });
+
+    expect(list[0].file.toBlob()).toBeUndefined();
+
+    await vi.advanceTimersByTimeAsync(100);
+    expect(list[0].file.toBlob()).toBeNull();
+  });
+});
