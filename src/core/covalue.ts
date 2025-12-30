@@ -174,8 +174,8 @@ export function createMockCoList<T>(
     baseJazz.push = vi.fn((value: unknown) => {
       list.push(value as T);
     });
-    baseJazz.splice = vi.fn((index: number, count: number) => {
-      list.splice(index, count);
+    baseJazz.splice = vi.fn((index: number, count: number, ...insertItems: unknown[]) => {
+      list.splice(index, count, ...(insertItems as T[]));
     });
   }
 
