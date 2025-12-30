@@ -57,3 +57,12 @@ export {
   type MockJazzAPI,
   type MockOwner,
 } from './jazz-api.js';
+// Reactive collections (Proxy-based)
+export {
+  createMapWithReactiveCollections,
+  createReactiveList,
+  createReactiveRecord,
+  type MapWithReactiveCollectionsOptions,
+  type ReactiveCollection,
+  type ReactiveCollectionOptions,
+} from './reactive-collection.js';

@@ -1,0 +1,257 @@
+# Plan: jazz-mock
+
+An independent npm package providing comprehensive testing utilities for Jazz.tools applications.
+
+## Project Overview
+
+**Goal**: Create `jazz-mock`, a standalone npm package that provides mocking utilities for Jazz.tools, extracted and generalized from wicketmap's battle-tested mocking patterns.
+
+**Repository**: New standalone repo at `~/src/jazz-mock`
+
+**Scope**: Core Jazz only (CoValues, hooks, async) - no BetterAuth mocking
+
+**Why**:
+- Jazz.tools has no official mocking utilities
+- Both checklist and wicketmap reinvent mocking patterns
+- Other Jazz users likely face the same testing challenges
+- 50x speedup in tests vs real Jazz behavior
+
+## Package Structure
+
+```
+jazz-mock/
+├── src/
+│   ├── index.ts              # Main exports
+│   ├── core/
+│   │   ├── covalue.ts        # CoValue factory (createMockCoMap, createMockCoList)
+│   │   ├── account.ts        # Account/Group creation
+│   │   ├── jazz-api.ts       # $jazz API mock (set, push, splice, etc.)
+│   │   └── file-stream.ts    # FileStream mocking
+│   ├── react/
+│   │   ├── hooks.ts          # React hook mocks (useAccount, useCoState, etc.)
+│   │   ├── provider.ts       # Mock JazzProvider
+│   │   └── helpers.ts        # Test render helpers
+│   ├── async/
+│   │   ├── sync-mock.ts      # Synchronous behavior simulation
+│   │   └── delayed-mock.ts   # Realistic async simulation
+│   ├── fixtures/
+│   │   ├── factory.ts        # Generic fixture factory
+│   │   └── builders.ts       # Builder pattern for complex structures
+│   └── vitest/
+│       ├── setup.ts          # Vitest setup helpers
+│       └── matchers.ts       # Custom assertions
+├── package.json
+├── tsconfig.json
+├── vitest.config.ts
+├── README.md
+└── examples/
+    ├── basic-covalue.test.ts
+    ├── react-hooks.test.ts
+    └── async-operations.test.ts
+```
+
+## Core API Design
+
+### 1. CoValue Factories
+
+```typescript
+import { createMockCoMap, createMockCoList, createMockJazzAPI } from 'jazz-mock';
+
+// Create a mock CoMap with $jazz metadata
+const folder = createMockCoMap({
+  name: 'My Folder',
+  expanded: true,
+  archived: false,
+});
+// folder.$jazz.id, folder.$jazz.set(), etc. all work
+
+// Create a mock CoList with array mutations
+const items = createMockCoList([item1, item2]);
+// items.$jazz.push(), items.$jazz.splice() all work
+// Also iterates as normal array
+```
+
+### 2. Account/Group Creation
+
+```typescript
+import { createMockAccount, createMockGroup } from 'jazz-mock';
+
+const account = createMockAccount({
+  profile: { name: 'Test User' },
+  root: {
+    folders: createMockCoList([]),
+    viewState: createMockCoMap({}),
+  },
+});
+
+const group = createMockGroup({
+  owner: account,
+  members: [account],
+});
+```
+
+### 3. React Hook Mocks
+
+```typescript
+import {
+  mockUseAccount,
+  mockUseCoState,
+  mockUseIsAuthenticated,
+  resetJazzReactMocks
+} from 'jazz-mock/react';
+
+// Configure mock return values
+mockUseAccount(accountFixture);
+mockUseIsAuthenticated(true);
+
+// In tests
+afterEach(() => resetJazzReactMocks());
+```
+
+### 4. Vitest Integration
+
+```typescript
+// vitest.config.ts
+import { jazzTestConfig } from 'jazz-mock/vitest';
+
+export default defineConfig({
+  ...jazzTestConfig,
+  // your config
+});
+
+// Or in setup.ts
+import { setupJazzMocks } from 'jazz-mock/vitest';
+setupJazzMocks();
+```
+
+### 5. Async Simulation
+
+```typescript
+import { createSyncMock, createDelayedMock } from 'jazz-mock/async';
+
+// Fast mode - everything instant (for most tests)
+const map = createSyncMock(schema);
+map.images.$jazz.set('id', image); // Immediately available
+
+// Realistic mode - simulates page reload (for polling tests)
+const map = createDelayedMock(schema, { blobLoadDelayMs: 150 });
+```
+
+## Implementation Phases
+
+### Phase 1: Core Infrastructure (Week 1)
+1. Initialize npm package with TypeScript, ESLint, Vitest
+2. Implement `createMockJazzAPI()` - the $jazz metadata factory
+3. Implement `createMockCoMap()` and `createMockCoList()`
+4. Implement ID generation and tracking
+5. Write unit tests for core functionality
+
+### Phase 2: Account & FileStream (Week 1-2)
+1. Implement `createMockAccount()` with root initialization
+2. Implement `createMockGroup()` with membership management
+3. Implement `FileStream` mocking (createFromBlob, loadAsBlob)
+4. Implement `FileStreamRegistry` for blob tracking
+5. Write unit tests
+
+### Phase 3: React Integration (Week 2)
+1. Implement React hook mocks (useAccount, useCoState, etc.)
+2. Implement `mockUsePasskeyAuth()` for auth state
+3. Implement mock JazzProvider
+4. Implement `resetJazzReactMocks()` cleanup
+5. Write React component tests
+
+### Phase 4: Async Simulation (Week 2-3)
+1. Implement sync mode using Proxy interception
+2. Implement delayed mode for realistic async behavior
+3. Implement `ensureLoaded()` simulation
+4. Write async operation tests
+
+### Phase 5: Vitest Integration (Week 3)
+1. Create `setupJazzMocks()` for global setup
+2. Create custom matchers (toHaveJazzId, toBeCoValue, etc.)
+3. Create config preset
+4. Write integration tests
+
+### Phase 6: Documentation & Examples (Week 3)
+1. Write comprehensive README
+2. Create example test files
+3. Document migration from wicketmap mocks
+4. Add JSDoc comments
+5. Create CHANGELOG
+
+### Phase 7: Publishing (Week 4)
+1. Configure npm publishing
+2. Set up GitHub Actions for CI/CD
+3. Create initial release
+4. Update checklist and wicketmap to use package
+
+## Key Design Decisions
+
+### 1. Schema-Agnostic
+The library provides generic utilities, not schema-specific mocks:
+```typescript
+// Generic - works with any schema
+const comap = createMockCoMap({ name: 'test' });
+
+// Users define their own schemas/fixtures
+const folder = createMockCoMap<FolderNode>({...});
+```
+
+### 2. TypeScript First
+Full TypeScript support with generics:
+```typescript
+function createMockCoMap<T extends object>(data: T): MockCoMap<T> {
+  // Properly typed return value
+}
+```
+
+### 3. Layered Architecture
+Following wicketmap's successful pattern:
+- **Fixtures** (plain objects) for 90% of tests
+- **API mocks** for service boundaries
+- **Async mocks** for polling/sync tests
+- **React mocks** for component tests
+
+### 4. Zero Jazz Runtime
+Tests run without actual Jazz connection:
+- No network calls
+- No sync delays
+- Deterministic behavior
+
+### 5. Vitest Compatible (Extensible to Jest)
+Primary focus on Vitest with Jest compatibility layer planned.
+
+## Files to Extract from Wicketmap
+
+| Source | Target | Changes |
+|--------|--------|---------|
+| `wicketmap/src/test/mocks/jazzMocks.ts` | `src/core/covalue.ts` | Remove FolderNode/POI specifics |
+| `wicketmap/src/test/mocks/jazzApi.ts` | `src/core/jazz-api.ts` | Keep as-is, generic |
+| `wicketmap/src/test/mocks/jazzReactMocks.ts` | `src/react/hooks.ts` | Remove wicketmap schemas |
+| `wicketmap/src/test/mocks/jazzAsyncMocks.ts` | `src/async/` | Generalize Proxy patterns |
+| `wicketmap/src/test/mocks/jazzFixtures.ts` | `src/fixtures/` | Convert to factory pattern |
+
+## Success Criteria
+
+1. Both checklist and wicketmap can use the package
+2. No breaking changes to existing test patterns
+3. 50x+ speedup maintained
+4. Full TypeScript support
+5. Comprehensive documentation
+6. Published to npm
+
+## Decisions Made
+
+1. **Package name**: `jazz-mock`
+2. **Repository**: New standalone repo at `~/src/jazz-mock`
+3. **Scope**: Core Jazz only (CoValues, hooks, async) - no BetterAuth mocking
+4. **NPM scope**: Unscoped (`jazz-mock`)
+
+## Next Steps
+
+1. Create the new repository at `~/src/jazz-mock`
+2. Initialize npm package with TypeScript, Vitest
+3. Extract and generalize mocks from wicketmap
+4. Add comprehensive tests
+5. Document with examples
+6. Publish to npm

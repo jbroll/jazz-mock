@@ -6,6 +6,7 @@
 
 export { jazzMatchers, registerJazzMatchers } from './matchers.js';
 export {
+  createCoValueConstructorMocks,
   createJazzConsoleFilter,
   createJazzToolsMock,
   getJazzMocks,

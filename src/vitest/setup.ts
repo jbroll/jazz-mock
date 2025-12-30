@@ -74,6 +74,56 @@ export function createJazzToolsMock() {
 }
 
 /**
+ * Create co.* constructor mocks that return actual values
+ *
+ * Unlike createJazzToolsMock() which returns empty objects from .create(),
+ * this returns constructors whose .create() methods return the actual
+ * data passed to them. Useful for testing code that creates CoValues.
+ *
+ * @returns Object with co.list, co.record, co.map constructors
+ *
+ * @example
+ * ```typescript
+ * vi.mock("jazz-tools", () => ({
+ *   co: createCoValueConstructorMocks(),
+ * }));
+ *
+ * // In your code under test
+ * const list = MyList.create(["a", "b"], { owner });
+ * // list is now ["a", "b"] with $isLoaded and $jazz
+ * ```
+ */
+export function createCoValueConstructorMocks() {
+  return {
+    list: vi.fn((_schema: unknown) => ({
+      create: vi.fn((items: unknown[], _options: unknown) => {
+        const result = Array.isArray(items) ? [...items] : [];
+        Object.defineProperty(result, '$isLoaded', { value: true, enumerable: false });
+        Object.defineProperty(result, '$jazz', {
+          value: { push: vi.fn(), splice: vi.fn() },
+          enumerable: false,
+        });
+        return result;
+      }),
+    })),
+
+    record: vi.fn((_keySchema: unknown, _valueSchema: unknown) => ({
+      create: vi.fn((obj: Record<string, unknown>, _options: unknown) => {
+        const result = { ...obj, $isLoaded: true, $jazz: { set: vi.fn(), delete: vi.fn() } };
+        return result;
+      }),
+    })),
+
+    map: vi.fn((_schema: unknown) => ({
+      create: vi.fn((data: Record<string, unknown>, _options: unknown) => {
+        const result = { ...data, $isLoaded: true, $jazz: { set: vi.fn(), delete: vi.fn() } };
+        return result;
+      }),
+    })),
+  };
+}
+
+/**
  * Options for setupJazzMocks
  */
 export interface SetupJazzMocksOptions {
