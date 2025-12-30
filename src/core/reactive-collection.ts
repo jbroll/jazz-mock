@@ -265,11 +265,13 @@ export interface MapWithReactiveCollectionsOptions extends ReactiveCollectionOpt
  */
 export function createMapWithReactiveCollections(options: MapWithReactiveCollectionsOptions = {}) {
   const id = options.id ?? `map-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  const name = options.name ?? 'Test Map';
 
   return {
     $isLoaded: true as const,
     id,
-    name: options.name ?? 'Test Map',
+    name,
+    path: `/${name}`,
     type: 'map' as const,
     created_at: new Date(),
     updated_at: new Date(),
@@ -296,4 +298,48 @@ export function createMapWithReactiveCollections(options: MapWithReactiveCollect
     defaultSchema: options.defaultSchema,
     $jazz: createMockJazzAPI({ id }),
   };
+}
+
+/**
+ * Options for createMapWithSyncImages (alias for backward compatibility)
+ */
+export interface MapWithSyncImagesOptions {
+  name?: string;
+  defaultTemplate?: string;
+  defaultSchema?: string;
+  /** Simulate async blob loading (page reload scenario) */
+  simulateAsyncLoading?: boolean;
+  /** Delay in ms before blobs become available */
+  blobLoadDelayMs?: number;
+}
+
+/**
+ * Create a map fixture with synchronous image/file collections
+ *
+ * Alias for createMapWithReactiveCollections with backward-compatible options.
+ *
+ * @param options - Configuration options
+ * @returns Map fixture with reactive images and files collections
+ *
+ * @example
+ * ```typescript
+ * // Fast mode: For upload tests (images and blobs immediately available)
+ * const map = createMapWithSyncImages({ name: "Test Map" });
+ *
+ * // Realistic mode: For page reload tests (images appear but blobs load async)
+ * const map = createMapWithSyncImages({
+ *   name: "Test Map",
+ *   simulateAsyncLoading: true,
+ *   blobLoadDelayMs: 150,
+ * });
+ * ```
+ */
+export function createMapWithSyncImages(options: MapWithSyncImagesOptions = {}) {
+  return createMapWithReactiveCollections({
+    name: options.name,
+    defaultTemplate: options.defaultTemplate,
+    defaultSchema: options.defaultSchema,
+    simulateAsyncLoading: options.simulateAsyncLoading,
+    asyncLoadDelayMs: options.blobLoadDelayMs,
+  });
 }

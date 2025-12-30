@@ -60,9 +60,11 @@ export {
 // Reactive collections (Proxy-based)
 export {
   createMapWithReactiveCollections,
+  createMapWithSyncImages,
   createReactiveList,
   createReactiveRecord,
   type MapWithReactiveCollectionsOptions,
+  type MapWithSyncImagesOptions,
   type ReactiveCollection,
   type ReactiveCollectionOptions,
 } from './reactive-collection.js';
