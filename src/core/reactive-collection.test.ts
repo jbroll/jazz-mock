@@ -59,15 +59,15 @@ describe('createReactiveRecord', () => {
 
     record.$jazz.set('count', 42);
 
-    expect(record['count']).toBe(42);
+    expect(record.count).toBe(42);
   });
 
   it('supports property assignment via Proxy', () => {
     const record = createReactiveRecord<number>();
 
-    record['count'] = 42;
+    record.count = 42;
 
-    expect(record['count']).toBe(42);
+    expect(record.count).toBe(42);
   });
 
   it('does not allow setting $ properties via Proxy', () => {
@@ -76,7 +76,7 @@ describe('createReactiveRecord', () => {
     // Attempting to set $foo should not work
     record['$foo' as keyof typeof record] = 'test' as unknown;
 
-    expect(record['$foo']).toBeUndefined();
+    expect(record.$foo).toBeUndefined();
   });
 
   it('reports $isLoaded and $jazz in has check', () => {
@@ -430,14 +430,14 @@ describe('clearBlobLoaderTimers', () => {
     record.$jazz.set('item', { file: { toBlob: () => mockBlob } });
 
     // Initially undefined
-    expect(record['item'].file.toBlob()).toBeUndefined();
+    expect(record.item.file.toBlob()).toBeUndefined();
 
     // Clear timers before they complete
     clearBlobLoaderTimers();
 
     // Advance time - blob should still be undefined because timer was cleared
     vi.advanceTimersByTime(2000);
-    expect(record['item'].file.toBlob()).toBeUndefined();
+    expect(record.item.file.toBlob()).toBeUndefined();
 
     vi.useRealTimers();
   });
@@ -471,7 +471,7 @@ describe('reactive collection edge cases', () => {
 
     record.$jazz.set('key', null);
 
-    expect(record['key']).toBeNull();
+    expect(record.key).toBeNull();
   });
 
   it('handles undefined values in record', () => {
@@ -479,7 +479,7 @@ describe('reactive collection edge cases', () => {
 
     record.$jazz.set('key', undefined);
 
-    expect(record['key']).toBeUndefined();
+    expect(record.key).toBeUndefined();
     expect(record.$jazz.has('key')).toBe(true);
   });
 
@@ -496,7 +496,7 @@ describe('reactive collection edge cases', () => {
     await vi.advanceTimersByTimeAsync(100);
 
     // Should have the delayed blob loader added
-    expect(record['item'].file).toBeDefined();
+    expect(record.item.file).toBeDefined();
 
     vi.useRealTimers();
   });
@@ -517,7 +517,7 @@ describe('reactive collection edge cases', () => {
     // Need to advance timers and flush promises
     await vi.advanceTimersByTimeAsync(100);
 
-    expect(record['item'].file.toBlob()).toBe(mockBlob);
+    expect(record.item.file.toBlob()).toBe(mockBlob);
 
     vi.useRealTimers();
   });
@@ -558,11 +558,11 @@ describe('blob loader error handling', () => {
     });
 
     // Initially undefined
-    expect(record['item'].file.toBlob()).toBeUndefined();
+    expect(record.item.file.toBlob()).toBeUndefined();
 
     // After delay, should return null (error was caught)
     await vi.advanceTimersByTimeAsync(100);
-    expect(record['item'].file.toBlob()).toBeNull();
+    expect(record.item.file.toBlob()).toBeNull();
   });
 
   it('handles toBlob returning rejected Promise', async () => {
@@ -578,11 +578,11 @@ describe('blob loader error handling', () => {
     });
 
     // Initially undefined
-    expect(record['item'].file.toBlob()).toBeUndefined();
+    expect(record.item.file.toBlob()).toBeUndefined();
 
     // After delay, should return null (rejection was caught)
     await vi.advanceTimersByTimeAsync(100);
-    expect(record['item'].file.toBlob()).toBeNull();
+    expect(record.item.file.toBlob()).toBeNull();
   });
 
   it('handles toBlob returning undefined', async () => {
@@ -598,7 +598,7 @@ describe('blob loader error handling', () => {
     });
 
     await vi.advanceTimersByTimeAsync(100);
-    expect(record['item'].file.toBlob()).toBeNull();
+    expect(record.item.file.toBlob()).toBeNull();
   });
 
   it('handles toBlob returning null via Promise', async () => {
@@ -614,7 +614,7 @@ describe('blob loader error handling', () => {
     });
 
     await vi.advanceTimersByTimeAsync(100);
-    expect(record['item'].file.toBlob()).toBeNull();
+    expect(record.item.file.toBlob()).toBeNull();
   });
 
   it('list items handle toBlob errors', async () => {

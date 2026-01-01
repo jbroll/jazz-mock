@@ -4,6 +4,8 @@ Testing utilities for [Jazz.tools](https://jazz.tools) applications.
 
 ## Features
 
+- **Fluent Testing API**: `JazzTestContext` with swappable backends (mock or real Jazz)
+- **Backend Switching**: `JAZZ_TEST_BACKEND=mock|jazz` for fast mocks or real Jazz behavior
 - **CoValue Factories**: Create mock CoMap, CoList, and CoRecord objects with `$jazz` API
 - **Reactive Collections**: Proxy-based collections that track mutations for image/file upload testing
 - **Account & Group Mocks**: Mock Jazz accounts and groups for authentication testing
@@ -12,7 +14,7 @@ Testing utilities for [Jazz.tools](https://jazz.tools) applications.
 - **Async Loading Simulation**: Simulate page reload scenarios with delayed blob loading
 - **Vitest Integration**: Setup helpers and custom matchers for Vitest
 - **TypeScript First**: Full TypeScript support with generics
-- **Zero Jazz Runtime**: Tests run without actual Jazz connection
+- **Zero Jazz Runtime**: Mock backend runs without actual Jazz connection
 
 ## Installation
 
@@ -44,6 +46,146 @@ expect(folder.$jazz.id).toBeDefined();
 folder.$jazz.set('name', 'Updated');
 expect(folder.$jazz.set).toHaveBeenCalledWith('name', 'Updated');
 ```
+
+## Fluent Testing API
+
+For integration testing with swappable backends. Provides generic Group-based
+permission testing - app-specific concepts (folders, documents, etc.) should
+be built on top of this in your app's test utilities.
+
+```typescript
+import { JazzTestContext } from 'jazz-mock';
+
+describe('Group Permissions', () => {
+  let ctx: JazzTestContext;
+
+  beforeEach(async () => {
+    // Uses JAZZ_TEST_BACKEND env var, defaults to 'mock'
+    ctx = await JazzTestContext.create();
+
+    // Or explicitly specify backend:
+    // ctx = await JazzTestContext.create({ backend: 'jazz' });
+  });
+
+  it('tests group permissions', async () => {
+    const group = ctx.createGroup();
+    const collaborator = await ctx.createAccount('Bob');
+
+    ctx.addMember(group, collaborator, 'writer');
+
+    expect(ctx.canWrite(group, collaborator)).toBe(true);
+    expect(ctx.canAdmin(group, collaborator)).toBe(false);
+  });
+});
+```
+
+### Backend Switching
+
+Control which backend to use:
+
+```bash
+# Fast mocks (default) - no real Jazz runtime
+JAZZ_TEST_BACKEND=mock npm test
+
+# Real Jazz - actual Jazz behavior via jazz-tools/testing
+JAZZ_TEST_BACKEND=jazz npm test
+```
+
+#### Per-File Backend Override
+
+A test file can force a specific backend regardless of the environment variable.
+This is useful when certain tests always need real Jazz behavior:
+
+```typescript
+// permissions.test.ts - Always use real Jazz
+import { vi, describe, it, beforeEach } from 'vitest';
+
+// Force real Jazz for this file (unmock the global mocks)
+vi.unmock('jazz-tools');
+vi.unmock('jazz-react');
+
+import { JazzTestContext } from 'jazz-mock';
+
+describe('Permission Tests', () => {
+  let ctx: JazzTestContext;
+
+  beforeEach(async () => {
+    // Explicitly use jazz backend
+    ctx = await JazzTestContext.create({ backend: 'jazz' });
+  });
+
+  it('tests real Jazz permissions', async () => {
+    // Uses actual Jazz Groups and permission system
+  });
+});
+```
+
+#### Backend Control Summary
+
+| Method | Scope | Usage |
+|--------|-------|-------|
+| Default | All tests | Mock backend (fast) |
+| `JAZZ_TEST_BACKEND=jazz` | All tests | Real Jazz |
+| `vi.unmock()` + `{ backend: 'jazz' }` | Single file | Real Jazz (ignores env var) |
+
+### JazzTestContext API
+
+| Method | Description |
+|--------|-------------|
+| `JazzTestContext.create(options?)` | Create test context with optional backend selection |
+| `ctx.createAccount(name)` | Create additional test account |
+| `ctx.createGroup()` | Create group owned by current account |
+| `ctx.addMember(group, account, role)` | Add member with role: 'reader' \| 'writer' \| 'admin' |
+| `ctx.removeMember(group, account)` | Remove member from group |
+| `ctx.canRead(group, account)` | Check if account has any role in group |
+| `ctx.canWrite(group, account)` | Check if account has writer or admin role |
+| `ctx.canAdmin(group, account)` | Check if account has admin role |
+| `ctx.getRoleOf(group, account)` | Get account's role in group |
+| `ctx.setActiveAccount(account)` | Switch active account context |
+
+### Building App-Specific Test Utilities
+
+Jazz-mock provides generic primitives. Build your app-specific helpers on top:
+
+```typescript
+// my-app/test/helpers.ts
+import { JazzTestContext, TestGroup } from 'jazz-mock';
+import { FolderNode } from '../schemas';
+
+export interface TestFolder {
+  node: FolderNode;
+  group: TestGroup;
+}
+
+export async function createTestFolder(
+  ctx: JazzTestContext,
+  name: string,
+): Promise<TestFolder> {
+  const group = ctx.createGroup();
+  const node = FolderNode.create({ name }, { owner: group.raw });
+  return { node, group };
+}
+
+export function shareFolder(
+  ctx: JazzTestContext,
+  folder: TestFolder,
+  account: TestAccount,
+  role: Role,
+): void {
+  ctx.addMember(folder.group, account, role);
+}
+```
+
+### Performance
+
+The mock backend is significantly faster:
+
+| Backend | Permission tests |
+|---------|------------------|
+| `mock`  | ~15ms |
+| `jazz`  | ~2700ms |
+
+Use `mock` for rapid development, `jazz` for integration verification.
 
 ## Core API
 
@@ -513,6 +655,13 @@ This library follows a simple testing philosophy:
 | `generateId(prefix?)` | Generate a random ID |
 | `generateSequentialId(prefix?)` | Generate a sequential ID |
 | `resetIdCounter()` | Reset sequential counter |
+| `JazzTestContext` | Fluent test context with swappable backends |
+| `setupJazzTesting()` | Helper to get context in test suites |
+| `createMockBackend()` | Create mock backend directly |
+| `createJazzBackend(options?)` | Create Jazz backend directly |
+| `TestAccount` | Account abstraction type |
+| `TestGroup` | Group abstraction type |
+| `Role` | Permission role type ('reader' \| 'writer' \| 'admin') |
 
 ### React (`jazz-mock/react`)
 
