@@ -87,5 +87,9 @@ export function createMockBackend(): TestBackend {
       group.addMember(owner, 'admin');
       return group;
     },
+
+    async waitForSync(): Promise<void> {
+      // No-op for mock backend - everything is synchronous
+    },
   };
 }

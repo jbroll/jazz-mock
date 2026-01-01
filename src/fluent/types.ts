@@ -88,4 +88,7 @@ export interface TestBackend {
 
   /** Create a group owned by the given account */
   createGroup(owner: TestAccount): TestGroup;
+
+  /** Wait for all accounts to sync their CoValues (jazz backend uses real sync, mock is no-op) */
+  waitForSync(): Promise<void>;
 }

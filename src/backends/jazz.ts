@@ -159,5 +159,13 @@ export function createJazzBackend(options: JazzBackendOptions = {}): TestBackend
       const raw = Group.create();
       return wrapGroup(raw);
     },
+
+    async waitForSync(): Promise<void> {
+      // Wait for all accounts to sync their CoValues
+      // This ensures all data is propagated before assertions
+      for (const account of accounts) {
+        await account.raw.$jazz.waitForAllCoValuesSync();
+      }
+    },
   };
 }

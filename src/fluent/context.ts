@@ -228,6 +228,26 @@ export class JazzTestContext {
   getRoleOf(group: TestGroup, account: TestAccount): Role | undefined {
     return group.getRoleOf(account.id);
   }
+
+  /**
+   * Wait for all accounts to sync their CoValues
+   *
+   * This is essential for reliable tests when using the 'jazz' backend.
+   * For the 'mock' backend, this is a no-op since everything is synchronous.
+   *
+   * Call this after operations that modify shared data to ensure
+   * all accounts have the latest state before making assertions.
+   *
+   * @example
+   * ```typescript
+   * ctx.shareFolder(folder, collaborator, 'writer');
+   * await ctx.waitForSync();  // Ensure sync is complete
+   * expect(ctx.canWrite(folder, collaborator)).toBe(true);
+   * ```
+   */
+  async waitForSync(): Promise<void> {
+    await this.backend.waitForSync();
+  }
 }
 
 /**

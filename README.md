@@ -142,6 +142,34 @@ describe('Permission Tests', () => {
 | `ctx.canAdmin(group, account)` | Check if account has admin role |
 | `ctx.getRoleOf(group, account)` | Get account's role in group |
 | `ctx.setActiveAccount(account)` | Switch active account context |
+| `ctx.waitForSync()` | Wait for all accounts to sync their CoValues |
+
+### Reliable Test Pattern with waitForSync
+
+When using the `jazz` backend, CoValue changes need to sync across accounts.
+Use `waitForSync()` after sharing operations to ensure data is propagated
+before assertions:
+
+```typescript
+it('shares folder with collaborator', async () => {
+  const group = ctx.createGroup();
+  const collaborator = await ctx.createAccount('Bob');
+
+  ctx.addMember(group, collaborator, 'writer');
+  await ctx.waitForSync();  // Ensure sync completes
+
+  expect(ctx.canWrite(group, collaborator)).toBe(true);
+});
+```
+
+This pattern works reliably with both backends:
+- **mock**: `waitForSync()` returns immediately (synchronous)
+- **jazz**: `waitForSync()` waits for actual Jazz sync to complete
+
+Always call `waitForSync()` after:
+- Adding/removing group members
+- Modifying shared CoValues
+- Any operation where another account needs to see the changes
 
 ### Building App-Specific Test Utilities
 
