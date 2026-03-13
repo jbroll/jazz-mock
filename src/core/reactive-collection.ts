@@ -241,18 +241,20 @@ export function createReactiveList<T = unknown>(
 
   const $jazz: MockJazzAPI = {
     ...createMockJazzAPI({ idPrefix: 'colist' }),
-    push: vi.fn((value: T) => {
-      if (simulateAsync && value && typeof value === 'object' && 'file' in value) {
-        const valueWithDelayedBlob = {
-          ...value,
-          file: createDelayedBlobLoader(
-            (value as { file: { toBlob?: () => Blob | undefined } }).file,
-            loadDelay,
-          ),
-        };
-        data.push(valueWithDelayedBlob as T);
-      } else {
-        data.push(value);
+    push: vi.fn((...values: T[]) => {
+      for (const value of values) {
+        if (simulateAsync && value && typeof value === 'object' && 'file' in value) {
+          const valueWithDelayedBlob = {
+            ...value,
+            file: createDelayedBlobLoader(
+              (value as { file: { toBlob?: () => Blob | undefined } }).file,
+              loadDelay,
+            ),
+          };
+          data.push(valueWithDelayedBlob as T);
+        } else {
+          data.push(value);
+        }
       }
     }),
     splice: vi.fn((index: number, count: number, ...items: T[]) => {

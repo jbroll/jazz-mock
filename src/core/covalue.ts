@@ -372,3 +372,88 @@ export function createIterableCoList<T>(
 
   return list as MockCoList<T> & { findIndex: (fn: (item: T) => boolean) => number };
 }
+
+// ─── Strict Jazz CoList / CoRecord Proxies ────────────────────────────────────
+//
+// Real Jazz CoLists are array-like (length + indexed access, $jazz.push/set/splice)
+// but do NOT implement Symbol.iterator. These helpers reproduce that behaviour so
+// tests catch regressions like `[...coList]` (would throw in production) while
+// `Array.from(coList)` continues to work.
+
+/**
+ * Proxy-based mock that mimics real Jazz CoList behaviour:
+ *   - indexed access via `list[i]`
+ *   - `list.length`
+ *   - `list.$jazz.{push, set, splice}` that mutate the underlying array
+ *   - NO `Symbol.iterator` (spread `[...list]` will throw, as in production)
+ *   - `Array.from(list)` works via the length+index protocol
+ *
+ * Use this instead of `createMockCoList` when you need to verify that
+ * production code uses `Array.from()` and not spread / `for...of`.
+ */
+export interface JazzCoListProxy<T> {
+  readonly length: number;
+  readonly [index: number]: T;
+  readonly $jazz: {
+    push: (item: T) => void;
+    set: (index: number, item: T) => void;
+    splice: (start: number, count: number) => void;
+  };
+}
+
+export function createJazzCoList<T>(initial: T[] = []): JazzCoListProxy<T> {
+  const arr = [...initial];
+  const jazz = {
+    push: vi.fn((item: T) => {
+      arr.push(item);
+    }),
+    set: vi.fn((index: number, item: T) => {
+      arr[index] = item;
+    }),
+    splice: vi.fn((start: number, count: number) => {
+      arr.splice(start, count);
+    }),
+  };
+  return new Proxy({ $jazz: jazz } as unknown as Record<string | symbol, unknown>, {
+    get(_target, prop) {
+      if (prop === '$jazz') return jazz;
+      if (prop === 'length') return arr.length;
+      if (typeof prop === 'string' && !Number.isNaN(Number(prop))) {
+        return arr[Number(prop)];
+      }
+      // Deliberately omit Symbol.iterator — Array.from uses length+index instead
+      return undefined;
+    },
+  }) as unknown as JazzCoListProxy<T>;
+}
+
+/**
+ * Proxy-based mock that mimics a Jazz CoRecord (key → CoList) as used by
+ * `layerFeaturesStore`. Returned lists are `JazzCoListProxy` instances
+ * (array-like, no `Symbol.iterator`).
+ *
+ * @param layers - Record of layerId → initial items
+ */
+export interface JazzCoRecordProxy<T> {
+  readonly $jazz: { set: (key: string, list: JazzCoListProxy<T>) => void };
+  readonly [key: string]: JazzCoListProxy<T> | unknown;
+}
+
+export function createJazzCoRecord<T>(layers: Record<string, T[]> = {}): JazzCoRecordProxy<T> {
+  const entries: Record<string, JazzCoListProxy<T>> = {};
+  for (const [key, items] of Object.entries(layers)) {
+    entries[key] = createJazzCoList<T>(items);
+  }
+  const jazz = {
+    set: vi.fn((key: string, list: JazzCoListProxy<T>) => {
+      entries[key] = list;
+    }),
+  };
+  return new Proxy({ $jazz: jazz } as unknown as Record<string | symbol, unknown>, {
+    get(_target, prop) {
+      if (prop === '$jazz') return jazz;
+      if (typeof prop === 'string' && prop in entries) return entries[prop];
+      return undefined;
+    },
+  }) as unknown as JazzCoRecordProxy<T>;
+}
