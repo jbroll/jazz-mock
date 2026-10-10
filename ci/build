@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Builds jazz-mock when simple-ci consumes it as a sibling dependency (a consumer's CI_DEPS). sci
+# runs this once per SHA and may hardlink the previous SHA's node_modules when the lockfile is
+# unchanged, so install only when node_modules is missing.
+set -euo pipefail
+
+# --ignore-scripts: `prepare` installs git hooks into .git, which is a file in sci's worktree.
+[ -d node_modules ] || npm ci --ignore-scripts
+npm run build
